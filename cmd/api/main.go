@@ -7,28 +7,35 @@ import (
 	"os/signal"
 	"syscall"
 	"test-hex-architecture/internal/shared/config"
+	"test-hex-architecture/internal/shared/db"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+
+	if err := config.LoadEnv(); err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+
 	ctx := context.Background()
-	mongoResource, err := config.NewMongo(ctx)
+	mongoResource, err := db.NewMongo(ctx)
 
 	if err != nil {
-		log.Fatal("Mongo init %v", err)
+		log.Fatalf("Mongo init %v", err)
 	}
 	defer mongoResource.Disconnect(ctx)
 
-	//Iinit router
+	// Init router
 	r := gin.Default()
 
 	// TODO: registar handlers aqui cuanod agreguemos el repositorio y casos de uso
 
 	//Arrancar servidor
+	addr := ":" + config.HTTPPort()
 	SrvErr := make(chan error, 1)
-	go func() { SrvErr <= r.run(":8080") }()
+	go func() { SrvErr <- r.Run(addr) }()
 
 	// Señales de apagado
 	quit := make(chan os.Signal, 1)

@@ -1,9 +1,10 @@
-package config
+package db
 
 import (
 	"context"
 	"errors"
-	"os"
+	"log"
+	"test-hex-architecture/internal/shared/config"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -16,8 +17,17 @@ type MongoResource struct {
 }
 
 func NewMongo(ctx context.Context) (*MongoResource, error) {
-	uri := os.Getenv("MONGODB_URI")
-	dbName := os.Getenv("MONGODB_DB")
+	user, errUser := config.MongoUser()
+	pass, errPass := config.MongoPass()
+	host, errHost := config.MongoHost()
+	port, errPort := config.MongoPort()
+	dbName, errDBName := config.MongoDBName()
+
+	if errUser != nil || errPass != nil || errHost != nil || errPort != nil || errDBName != nil {
+		return nil, errors.New("error retrieving MongoDB configuration from environment variables")
+	}
+
+	uri := "mongodb://" + user + ":" + pass + "@" + host + ":" + port
 	if uri == "" || dbName == "" {
 		return nil, errors.New("missing MongoDB URI or DB name in environment variables")
 	}
@@ -36,6 +46,8 @@ func NewMongo(ctx context.Context) (*MongoResource, error) {
 	if err := client.Ping(pingCtx, nil); err != nil {
 		return nil, err
 	}
+
+	log.Printf("Connected to MongoDB at %s, using database: %s", host, dbName)
 
 	return &MongoResource{
 		Client: client,
