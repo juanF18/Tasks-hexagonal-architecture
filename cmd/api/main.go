@@ -6,6 +6,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	httpadapter "test-hex-architecture/internal/adapter/http"
+	mongorepo "test-hex-architecture/internal/adapter/repository/mongo"
+	taskservice "test-hex-architecture/internal/core/service/task"
 	"test-hex-architecture/internal/shared/config"
 	"test-hex-architecture/internal/shared/db"
 	"time"
@@ -31,6 +34,17 @@ func main() {
 	r := gin.Default()
 
 	// TODO: registar handlers aqui cuanod agreguemos el repositorio y casos de uso
+	// cmd/api/main.go (fragmento de wiring)
+	repo := mongorepo.NewTaskRepository(mongoResource.DB)
+
+	createSvc := taskservice.NewCreate(repo)
+	getSvc := taskservice.NewGetByID(repo)
+	listSvc := taskservice.NewList(repo)
+	updateSvc := taskservice.NewUpdate(repo)
+	deleteSvc := taskservice.NewDelete(repo)
+
+	taskH := httpadapter.NewTaskHandler(createSvc, getSvc, listSvc, updateSvc, deleteSvc)
+	taskH.Register(r)
 
 	//Arrancar servidor
 	addr := ":" + config.HTTPPort()
