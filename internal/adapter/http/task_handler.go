@@ -1,4 +1,3 @@
-// internal/adapter/http/task_handler.go
 package httpadapter
 
 import (

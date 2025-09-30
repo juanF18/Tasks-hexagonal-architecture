@@ -45,6 +45,7 @@ func main() {
 
 	taskH := httpadapter.NewTaskHandler(createSvc, getSvc, listSvc, updateSvc, deleteSvc)
 	taskH.Register(r)
+	httpadapter.RegisterDocsHandler(r)
 
 	//Arrancar servidor
 	addr := ":" + config.HTTPPort()

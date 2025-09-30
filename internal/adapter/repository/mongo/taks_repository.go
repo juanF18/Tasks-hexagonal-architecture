@@ -85,12 +85,15 @@ func (r *TaskRepository) FindAll(ctx context.Context) ([]*task.Task, error) {
 }
 
 func (r *TaskRepository) Update(ctx context.Context, t *task.Task) error {
-	_, err := r.col.UpdateOne(ctx, t.ID, bson.M{"$set": bson.M{
-		"title":       t.Title,
-		"description": t.Description,
-		"done":        t.Done,
-		"updated_at":  t.UpdatedAt.Unix(),
-	}})
+	update := bson.M{
+		"$set": bson.M{
+			"title":       t.Title,
+			"description": t.Description,
+			"done":        t.Done,
+			"updatedAt":   t.UpdatedAt.Unix(),
+		},
+	}
+	_, err := r.col.UpdateByID(ctx, t.ID, update)
 	return err
 }
 
