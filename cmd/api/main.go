@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 	httpadapter "test-hex-architecture/internal/adapter/http"
+	"test-hex-architecture/internal/adapter/http/docs"
 	mongorepo "test-hex-architecture/internal/adapter/repository/mongo"
 	taskservice "test-hex-architecture/internal/core/service/task"
 	"test-hex-architecture/internal/shared/config"
@@ -45,7 +46,7 @@ func main() {
 
 	taskH := httpadapter.NewTaskHandler(createSvc, getSvc, listSvc, updateSvc, deleteSvc)
 	taskH.Register(r)
-	httpadapter.RegisterDocsHandler(r)
+	docs.RegisterDocsHandler(r)
 
 	//Arrancar servidor
 	addr := ":" + config.HTTPPort()
