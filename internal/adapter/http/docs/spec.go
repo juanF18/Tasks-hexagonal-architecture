@@ -37,7 +37,7 @@ func buildOpenAPISpec() map[string]interface{} {
 		"openapi": "3.0.0",
 		"info": map[string]interface{}{
 			"title":       "Task API",
-			"description": "A task management API with hexagonal architecture",
+			"description": "A task management API with hexagonal architecture. **Tip**: Use pagination parameters (page & limit) for better performance.",
 			"version":     "1.0.0",
 		},
 		"servers": []map[string]interface{}{
@@ -48,6 +48,10 @@ func buildOpenAPISpec() map[string]interface{} {
 		},
 		"paths":      buildPaths(),
 		"components": buildComponents(),
+		"x-samples": map[string]interface{}{ // Ejemplos globales
+			"GET /tasks/?page=1&limit=10": "Recommended way to list tasks",
+			"GET /tasks/":                 "Gets all tasks (use with caution)",
+		},
 	}
 }
 

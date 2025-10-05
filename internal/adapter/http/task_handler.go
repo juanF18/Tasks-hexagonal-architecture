@@ -3,11 +3,13 @@ package httpadapter
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
 	taskservice "test-hex-architecture/internal/core/service/task"
+	"test-hex-architecture/internal/shared/domain"
 )
 
 type TaskHandler struct {
@@ -80,12 +82,37 @@ func (h *TaskHandler) list(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
-	items, err := h.List.Execute(ctx)
+	pageStr := c.DefaultQuery("page", "")
+	limitStr := c.DefaultQuery("limit", "")
+
+	var paginationParams *domain.PaginationParams = nil
+
+	if pageStr != "" && limitStr != "" {
+		page := 1
+		limit := 10
+
+		if pageStr != "" {
+			if p, err := strconv.Atoi(pageStr); err == nil {
+				page = p
+			}
+		}
+
+		if limitStr != "" {
+			if l, err := strconv.Atoi(limitStr); err == nil {
+				limit = l
+			}
+		}
+
+		params := domain.NewPaginationParams(page, limit)
+		paginationParams = &params
+	}
+
+	result, err := h.List.Execute(ctx, paginationParams)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list"})
 		return
 	}
-	c.JSON(http.StatusOK, items)
+	c.JSON(http.StatusOK, result)
 }
 
 func (h *TaskHandler) update(c *gin.Context) {

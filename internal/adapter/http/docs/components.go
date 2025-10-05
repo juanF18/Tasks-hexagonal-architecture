@@ -4,15 +4,18 @@ package docs
 func buildComponents() map[string]interface{} {
 	return map[string]interface{}{
 		"schemas": map[string]interface{}{
-			"Task":              getTaskSchema(),
-			"CreateTaskRequest": getCreateTaskRequestSchema(),
-			"UpdateTaskRequest": getUpdateTaskRequestSchema(),
-			"ErrorResponse":     getErrorResponseSchema(),
-			"IDResponse":        getIDResponseSchema(),
+			"Task":                  getTaskSchema(),
+			"CreateTaskRequest":     getCreateTaskRequestSchema(),
+			"UpdateTaskRequest":     getUpdateTaskRequestSchema(),
+			"ErrorResponse":         getErrorResponseSchema(),
+			"IDResponse":            getIDResponseSchema(),
+			"PaginatedTaskResponse": getPaginatedTaskResponseSchema(), // nuevo
+			"TaskArray":             getTaskArraySchema(),             // nuevo para compatibilidad
 		},
 	}
 }
 
+// Corregir: esto debe ser solo la entidad Task individual
 func getTaskSchema() map[string]interface{} {
 	return map[string]interface{}{
 		"type": "object",
@@ -41,16 +44,80 @@ func getTaskSchema() map[string]interface{} {
 				"type":        "string",
 				"format":      "date-time",
 				"description": "Task creation timestamp",
+				"example":     "2025-10-05T21:23:00Z",
 			},
 			"updatedAt": map[string]interface{}{
 				"type":        "string",
 				"format":      "date-time",
 				"description": "Task last update timestamp",
+				"example":     "2025-10-05T21:23:00Z",
 			},
 		},
 	}
 }
 
+// Schema para respuesta paginada (estructura principal)
+func getPaginatedTaskResponseSchema() map[string]interface{} {
+	return map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"data": map[string]interface{}{
+				"type": "array",
+				"items": map[string]interface{}{
+					"$ref": "#/components/schemas/Task",
+				},
+			},
+			"pagination": map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"currentPage": map[string]interface{}{
+						"type":        "integer",
+						"description": "Current page number",
+						"example":     1,
+					},
+					"pageSize": map[string]interface{}{
+						"type":        "integer",
+						"description": "Number of items per page",
+						"example":     10,
+					},
+					"totalItems": map[string]interface{}{
+						"type":        "integer",
+						"format":      "int64",
+						"description": "Total number of items in database",
+						"example":     25,
+					},
+					"totalPages": map[string]interface{}{
+						"type":        "integer",
+						"description": "Total number of pages",
+						"example":     3,
+					},
+					"hasNext": map[string]interface{}{
+						"type":        "boolean",
+						"description": "Whether there are more pages after current",
+						"example":     true,
+					},
+					"hasPrev": map[string]interface{}{
+						"type":        "boolean",
+						"description": "Whether there are pages before current",
+						"example":     false,
+					},
+				},
+			},
+		},
+	}
+}
+
+// Schema para array simple de tasks (cuando no hay paginación)
+func getTaskArraySchema() map[string]interface{} {
+	return map[string]interface{}{
+		"type": "array",
+		"items": map[string]interface{}{
+			"$ref": "#/components/schemas/Task",
+		},
+	}
+}
+
+// Los demás schemas permanecen igual...
 func getCreateTaskRequestSchema() map[string]interface{} {
 	return map[string]interface{}{
 		"type":     "object",

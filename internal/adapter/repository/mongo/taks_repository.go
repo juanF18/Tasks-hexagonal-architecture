@@ -8,6 +8,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 type TaskRepository struct{ col *mongo.Collection }
@@ -47,6 +48,10 @@ func fromDoc(d *taskDOC) *task.Task {
 	}
 }
 
+func (r *TaskRepository) CountAll(ctx context.Context) (int64, error) {
+	return r.col.CountDocuments(ctx, bson.M{})
+}
+
 func (r *TaskRepository) Save(ctx context.Context, t *task.Task) (string, error) {
 	_, err := r.col.InsertOne(ctx, toDoc(t))
 	if err != nil {
@@ -66,22 +71,32 @@ func (r *TaskRepository) FindByID(ctx context.Context, id string) (*task.Task, e
 	return fromDoc(&d), nil
 }
 
-func (r *TaskRepository) FindAll(ctx context.Context) ([]*task.Task, error) {
-	cur, err := r.col.Find(ctx, bson.M{})
+func (r *TaskRepository) FindAll(ctx context.Context, offset, limit int) ([]*task.Task, error) {
+	opts := options.Find()
+
+	if offset >= 0 && limit > 0 {
+		opts.SetSkip(int64(offset))
+		opts.SetLimit(int64(limit))
+	}
+
+	opts.SetSort(bson.M{"created_at": -1})
+
+	cursor, err := r.col.Find(ctx, bson.M{}, opts)
+
 	if err != nil {
 		return nil, err
 	}
-	defer cur.Close(ctx)
+	defer cursor.Close(ctx)
 
-	var out []*task.Task
-	for cur.Next(ctx) {
+	var tasks []*task.Task
+	for cursor.Next(ctx) {
 		var d taskDOC
-		if err := cur.Decode(&d); err != nil {
+		if err := cursor.Decode(&d); err != nil {
 			return nil, err
 		}
-		out = append(out, fromDoc(&d))
+		tasks = append(tasks, fromDoc(&d))
 	}
-	return out, cur.Err()
+	return tasks, cursor.Err()
 }
 
 func (r *TaskRepository) Update(ctx context.Context, t *task.Task) error {

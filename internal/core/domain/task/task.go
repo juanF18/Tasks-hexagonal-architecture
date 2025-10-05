@@ -16,6 +16,11 @@ type Task struct {
 	UpdatedAt   time.Time
 }
 
+type PaginationParams struct {
+	Page  int
+	Limit int
+}
+
 func NewTask(title, description string) (*Task, error) {
 	if title == "" {
 		return nil, errors.New("invalid task parameters")
